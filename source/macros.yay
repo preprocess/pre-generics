@@ -133,11 +133,7 @@ $(macro :recursion) {
 
     $property->setValue($ast, $internal);
 } >> {
-    class $$(concat(
-        $(className) _ $(types ... (_) {
-            $(typeSubstitution)
-        })
-    )) {
+    class $(className) {
         use \Pre\Generics\GenericTrait;
 
         private $$(unsafe($GENERIC_MAP)) = [
@@ -296,13 +292,7 @@ $(macro :recursion) {
 
     $ast->append($aliases);
 } >> {
-    new class $(parameters) extends $$(concat(
-        $(className) _ $(aliases ... (_) {
-            $(alias ... {
-                $(aliasName)
-            })
-        })
-    )) {
+    new class $(parameters) extends $(className) {
         $(aliases ... {
             $(alias ... {
                 protected $$$(unsafe(

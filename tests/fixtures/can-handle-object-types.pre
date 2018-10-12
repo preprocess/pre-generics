@@ -1,6 +1,6 @@
 <?php
 
-if (!class_exists('ObjectGreeter_A')) {
+if (!class_exists('ObjectGreeter')) {
     class Name
     {
         public $name;

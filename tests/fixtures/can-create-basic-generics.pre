@@ -1,6 +1,6 @@
 <?php
 
-if (!class_exists('Combiner_A_B_C')) {
+if (!class_exists('Combiner')) {
     class Combiner<I, J, K> {
         private K $iteration;
     

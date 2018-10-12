@@ -1,6 +1,6 @@
 <?php
 
-if (!class_exists('Greeter_A')) {
+if (!class_exists('Greeter')) {
     trait ExampleTrait {}
     
     class Greeter<Z> {
