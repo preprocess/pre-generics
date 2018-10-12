@@ -1,0 +1,21 @@
+<?php
+
+if (!class_exists('ObjectGreeter_A')) {
+    class Name
+    {
+        public $name;
+
+        public function __construct($name)
+        {
+            $this->name = $name;
+        }
+    }
+
+    class ObjectGreeter<N> {
+        public function greet(N $name) {
+            return "hello {$name->name}.";
+        }
+    }
+}
+
+return new ObjectGreeter<Name>;

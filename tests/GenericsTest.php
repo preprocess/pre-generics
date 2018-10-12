@@ -37,7 +37,13 @@ class GenericsTest extends TestCase
 
     public function test_can_handle_other_class_things()
     {
-        $greeter = process(__DIR__ . "/fixtures/test-can-handle-other-class-things.pre");
+        $greeter = process(__DIR__ . "/fixtures/can-handle-other-class-things.pre");
         $this->assertEquals("hello chris.", $greeter->greet("chris"));
+    }
+
+    public function test_can_handle_object_types()
+    {
+        $greeter = process(__DIR__ . "/fixtures/can-handle-object-types.pre");
+        $this->assertEquals("hello chris.", $greeter->greet(new Name("chris")));
     }
 }
