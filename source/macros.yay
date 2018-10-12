@@ -1,0 +1,288 @@
+<?php
+
+$(macro :recursion) {
+    $(chain(
+        buffer("class"),
+        ns() as className,
+        buffer("<"),
+        ls(
+            token(T_STRING) as type,
+            buffer(",")    
+        ) as types,
+        buffer(">"),
+        buffer("{"),
+        repeat(
+            either(
+                chain(
+                    buffer("const"),
+                    token(T_STRING) as constantName,
+                    buffer("="),
+                    expression() as constantValue,
+                    buffer(";")
+                ) as constant,
+                chain(
+                    buffer("use"),
+                    ns() as traitName,
+                    buffer(";")
+                ) as trait,
+                chain(
+                    functionModifiers(),
+                    optional(
+                        either(
+                            ns(),
+                            token(T_ARRAY)
+                        )
+                    ) as propertyType,
+                    token(T_VARIABLE) as propertyName,
+                    optional(
+                        buffer("=")
+                    ) as propertyEquals,
+                    optional(
+                        expression()
+                    ) as propertyValue,
+                    buffer(";")
+                ) as property,
+                chain(
+                    functionModifiers(),
+                    buffer("function"),
+                    ns() as functionName,
+                    buffer("("),
+                    functionArguments(),
+                    buffer(")"),
+                    functionReturn(),
+                    buffer("{"),
+                    layer() as functionBody,
+                    buffer("}")
+                ) as function
+            )
+        ) as members,
+        buffer("}")
+    ))
+} >> function($ast) {
+    $debug = function($value) {
+        throw new \Exception(print_r($value, true));
+    };
+
+    $stringFromNs = function($parts) {
+        $result = "";
+
+        foreach ($parts as $part) {
+            if (is_array($part)) {
+                $result .= join("", $part);
+                continue;
+            }
+
+            $result .= (string) $part;
+        }
+
+        return $result;
+    };
+
+    $reflector = new ReflectionClass(get_class($ast));
+    $property = $reflector->getProperty("ast");
+    $property->setAccessible(true);
+
+    $internal = $property->getValue($ast);
+
+    $types = [];
+    $substitutions = range("A", "Z");
+
+    foreach ($internal["types"] as $i => &$type) {
+        $types[] = (string) $type["type"];
+        $type["typeSubstitution"] = new \Yay\Token($substitutions[$i]);
+    }
+
+    foreach ($internal["members"] as &$member) {
+        if (isset($member["function"])) {
+            if (isset($member["function"]["functionArguments"])) {
+                foreach ($member["function"]["functionArguments"] as &$argument) {
+                    if (isset($argument["functionArgument"])) {
+                        if (isset($argument["functionArgument"]["functionArgumentType"])) {
+                            if (in_array($stringFromNs($argument["functionArgument"]["functionArgumentType"]), $types)) {
+                                $argument["functionArgument"]["functionArgumentTypeRemove"] = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (isset($member["function"]["functionReturn"])) {
+                if (isset($member["function"]["functionReturn"]["functionReturnType"])) {
+                    if (in_array($stringFromNs($member["function"]["functionReturn"]["functionReturnType"]), $types)) {
+                        $member["function"]["functionReturnComplex"] = true;
+                        $member["function"]["functionReturn"]["functionReturnTypeRemove"] = true;
+                    }
+                }
+            }
+        }
+
+        if (isset($member["property"])) {
+            if (isset($member["property"]["propertyType"])) {
+                if (in_array($stringFromNs($member["property"]["propertyType"]), $types)) {
+                    $member["property"]["propertyTypeRemove"] = true;
+                }
+            }
+        }
+    }
+
+
+    $property->setValue($ast, $internal);
+} >> {
+    class $$(concat(
+        $(className) _ $(types ... (_) {
+            $(typeSubstitution)
+        })
+    )) {
+        use \Pre\Generics\GenericTrait;
+
+        private $$(unsafe($GENERIC_MAP)) = [
+            $(types ... (,) {
+                $$(stringify($(type))) => $$(stringify($(typeSubstitution)))
+            })
+        ];
+
+        $(members ... {
+            $(constant ? {
+                $(constant ... {
+                    const $(constantName) = $(constantValue) ;
+                })
+            })
+
+            $(trait ? {
+                $(trait ... {
+                    use $(traitName) ;
+                })
+            })
+
+            $(property ? {
+
+                $(property ... {
+                    $$(functionModifiers($(functionModifiers)))
+                    $(propertyTypeRemove ! {
+                        $(propertyType)
+                    })
+                    $(propertyName) $(propertyEquals) $(propertyValue) ;
+                })
+            })
+
+            $(function ? {
+
+                $(function ... {
+                    $$(functionModifiers($(functionModifiers)))
+                    function
+                    $(functionName) (
+                        $(functionArguments ... (,) {
+                            $(functionArgument ... {
+                                $(functionArgumentTypeRemove ! {
+                                    $(functionArgumentType)
+                                })
+                                $(functionArgumentName)
+                            }) })
+                    ) $(functionReturn ... {
+                        $(functionReturnTypeRemove ! {
+                            : $(functionReturnType)
+                        })
+                    }) {
+                        $(functionArguments ... () {
+                            $(functionArgument ... {
+                                $(functionArgumentTypeRemove ? {
+                                    assert($this->validGenericType(
+                                        $(functionArgumentName), $$(stringify($(functionArgumentType)))
+                                    )); })
+                            }) })
+    
+                        
+                        
+                        $(functionReturn ? {
+                            $(functionReturnComplex ? {
+                                $$(unsafe($GENERIC_RESULT)) = (function() 
+                                $(functionArguments ? {
+                                    use ($(functionArguments ... (,) { $(functionArgument ... { $(functionArgumentName) }) }))
+                                }) {
+                                    $(functionBody)
+                                })();
+        
+                                assert($this->validGenericType(
+                                    $$(unsafe($GENERIC_RESULT)), $(functionReturn ... {
+                                        $$(stringify($(functionReturnType)))
+                                    })
+                                ));
+        
+                                return $$(unsafe($GENERIC_RESULT));
+                            })
+    
+                            $(functionReturnComplex ! {
+                                $(functionBody)
+                            })
+                        })
+    
+                        $(functionReturn ! {
+                            $(functionBody)
+                        })
+                    }
+                })
+            })
+        })
+    }
+}
+
+$(macro :recursion) {
+    $(chain(
+        buffer("new"),
+        ns() as className,
+        buffer("<"),
+        ls(
+            token(T_STRING) as type,
+            token(",")    
+        ) as types,
+        buffer(">"),
+        optional(
+            chain(
+                buffer("("),
+                layer(),
+                buffer(")")
+            ) as parameters
+        ),
+        _() as aliases
+    ))
+} >> function($ast) {
+    $types = [];
+    $aliases = [];
+
+    $letters = range("A", "Z");
+    $aliases = new \Yay\Ast("aliases");
+
+    foreach ($ast->{"types"} as $node) {
+        foreach ($letters as $letter) {
+            if (!isset($types[$letter])) {
+                $types[$letter] = $node["type"]->value();
+
+                $alias = new \Yay\Ast("alias");
+                $alias->append(new \Yay\Ast("aliasName", new \Yay\Token($letter)));
+                $alias->append(new \Yay\Ast("aliasType", $node["type"]));
+                $aliases->push($alias);
+
+                break;
+            }
+        }
+    }
+
+    $ast->append($aliases);
+} >> {
+    new class $(parameters) extends $$(concat(
+        $(className) _ $(aliases ... (_) {
+            $(alias ... {
+                $(aliasName)
+            })
+        })
+    )) {
+        $(aliases ... {
+            $(alias ... {
+                protected $$$(unsafe(
+                    $$(concat(
+                        GENERIC_TYPE_ $(aliasName)
+                    ))
+                )) = $$(stringify($(aliasType))); })
+        })
+    }
+}

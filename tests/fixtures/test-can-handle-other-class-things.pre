@@ -1,0 +1,22 @@
+<?php
+
+if (!class_exists('Greeter_A')) {
+    trait ExampleTrait {}
+    
+    class Greeter<Z> {
+        use \ExampleTrait;
+
+        const EXAMPLE_CONST = "hello";
+
+        private $exampleProperty1 = ".";
+        protected $exampleProperty2;
+        public $exampleProperty3;
+        static $exampleProperty4;
+
+        public function greet(Z $name) {
+            return static::EXAMPLE_CONST . " {$name}{$this->exampleProperty1}";
+        }
+    }
+}
+
+return new Greeter<string>;

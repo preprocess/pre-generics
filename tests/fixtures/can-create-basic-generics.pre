@@ -1,0 +1,28 @@
+<?php
+
+if (!class_exists('Combiner_A_B_C')) {
+    class Combiner<I, J, K> {
+        private K $iteration;
+    
+        public function combine(I $left, J $right): I
+        {
+            if (is_string($left) && is_string($right)) {
+                return "{$this->iteration}: {$left} {$right}";
+            }
+            
+            throw new \Exception('Unrecognised types');
+        }
+
+        public function badReturn(): I
+        {
+            return 1;
+        }
+    
+        public function __construct(K $iteration)
+        {
+            $this->iteration = $iteration;
+        }
+    }
+}
+
+return new Combiner<string, string, int>(123);
