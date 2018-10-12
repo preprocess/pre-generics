@@ -6,56 +6,61 @@ $(macro :recursion) {
         ns() as className,
         buffer("<"),
         ls(
-            token(T_STRING) as type,
+            either(
+                token(T_ARRAY),
+                ns()
+            ) as type,
             buffer(",")    
         ) as types,
         buffer(">"),
         buffer("{"),
-        repeat(
-            either(
-                chain(
-                    buffer("const"),
-                    token(T_STRING) as constantName,
-                    buffer("="),
-                    expression() as constantValue,
-                    buffer(";")
-                ) as constant,
-                chain(
-                    buffer("use"),
-                    ns() as traitName,
-                    buffer(";")
-                ) as trait,
-                chain(
-                    functionModifiers(),
-                    optional(
-                        either(
-                            ns(),
-                            token(T_ARRAY)
-                        )
-                    ) as propertyType,
-                    token(T_VARIABLE) as propertyName,
-                    optional(
-                        buffer("=")
-                    ) as propertyEquals,
-                    optional(
-                        expression()
-                    ) as propertyValue,
-                    buffer(";")
-                ) as property,
-                chain(
-                    functionModifiers(),
-                    buffer("function"),
-                    ns() as functionName,
-                    buffer("("),
-                    functionArguments(),
-                    buffer(")"),
-                    functionReturn(),
-                    buffer("{"),
-                    layer() as functionBody,
-                    buffer("}")
-                ) as function
-            )
-        ) as members,
+        optional(
+            repeat(
+                either(
+                    chain(
+                        buffer("const"),
+                        token(T_STRING) as constantName,
+                        buffer("="),
+                        expression() as constantValue,
+                        buffer(";")
+                    ) as constant,
+                    chain(
+                        buffer("use"),
+                        ns() as traitName,
+                        buffer(";")
+                    ) as trait,
+                    chain(
+                        functionModifiers(),
+                        optional(
+                            either(
+                                ns(),
+                                token(T_ARRAY)
+                            )
+                        ) as propertyType,
+                        token(T_VARIABLE) as propertyName,
+                        optional(
+                            buffer("=")
+                        ) as propertyEquals,
+                        optional(
+                            expression()
+                        ) as propertyValue,
+                        buffer(";")
+                    ) as property,
+                    chain(
+                        functionModifiers(),
+                        buffer("function"),
+                        ns() as functionName,
+                        buffer("("),
+                        functionArguments(),
+                        buffer(")"),
+                        functionReturn(),
+                        buffer("{"),
+                        layer() as functionBody,
+                        buffer("}")
+                    ) as function
+                )
+            ) as members
+        ),
         buffer("}")
     ))
 } >> function($ast) {
@@ -88,7 +93,7 @@ $(macro :recursion) {
     $substitutions = range("A", "Z");
 
     foreach ($internal["types"] as $i => &$type) {
-        $types[] = (string) $type["type"];
+        $types[] = $stringFromNs($type["type"]);
         $type["typeSubstitution"] = new \Yay\Token($substitutions[$i]);
     }
 
@@ -232,7 +237,10 @@ $(macro :recursion) {
         ns() as className,
         buffer("<"),
         ls(
-            token(T_STRING) as type,
+            either(
+                token(T_ARRAY),
+                ns()
+            ) as type,
             token(",")    
         ) as types,
         buffer(">"),
@@ -246,6 +254,25 @@ $(macro :recursion) {
         _() as aliases
     ))
 } >> function($ast) {
+    $debug = function($value) {
+        throw new \Exception(print_r($value, true));
+    };
+
+    $stringFromNs = function($parts) {
+        $result = "";
+
+        foreach ($parts as $part) {
+            if (is_array($part)) {
+                $result .= join("", $part);
+                continue;
+            }
+
+            $result .= (string) $part;
+        }
+
+        return $result;
+    };
+
     $types = [];
     $aliases = [];
 
@@ -255,7 +282,7 @@ $(macro :recursion) {
     foreach ($ast->{"types"} as $node) {
         foreach ($letters as $letter) {
             if (!isset($types[$letter])) {
-                $types[$letter] = $node["type"]->value();
+                $types[$letter] = $stringFromNs($node["type"]);
 
                 $alias = new \Yay\Ast("alias");
                 $alias->append(new \Yay\Ast("aliasName", new \Yay\Token($letter)));
