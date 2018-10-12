@@ -1,0 +1,11 @@
+<?php
+
+if (!class_exists('SquareGreeter')) {
+    class SquareGreeter[Z] {
+        public function greet(Z $name) {
+            return "hello {$name}.";
+        }
+    }
+}
+
+return new Greeter[string];

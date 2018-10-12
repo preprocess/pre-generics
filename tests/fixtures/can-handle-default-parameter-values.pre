@@ -1,0 +1,11 @@
+<?php
+
+if (!class_exists('DefaultGreeter')) {
+    class DefaultGreeter<Z> {
+        public function greet(Z $name = "chris") {
+            return "hello {$name}.";
+        }
+    }
+}
+
+return new DefaultGreeter<string>;

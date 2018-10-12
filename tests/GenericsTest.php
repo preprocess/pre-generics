@@ -46,4 +46,16 @@ class GenericsTest extends TestCase
         $greeter = process(__DIR__ . "/fixtures/can-handle-object-types.pre");
         $this->assertEquals("hello chris.", $greeter->greet(new Name("chris")));
     }
+
+    public function test_can_handle_square_brackets()
+    {
+        $greeter = process(__DIR__ . "/fixtures/can-handle-square-brackets.pre");
+        $this->assertEquals("hello chris.", $greeter->greet("chris"));
+    }
+
+    public function test_can_handle_default_parameter_values()
+    {
+        $greeter = process(__DIR__ . "/fixtures/can-handle-default-parameter-values.pre");
+        $this->assertEquals("hello chris.", $greeter->greet());
+    }
 }

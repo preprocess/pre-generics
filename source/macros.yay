@@ -4,7 +4,10 @@ $(macro :recursion) {
     $(chain(
         buffer("class"),
         ns() as className,
-        buffer("<"),
+        either(
+            buffer("<"),
+            buffer("[")
+        ),
         ls(
             either(
                 token(T_ARRAY),
@@ -12,7 +15,10 @@ $(macro :recursion) {
             ) as type,
             buffer(",")    
         ) as types,
-        buffer(">"),
+        either(
+            buffer(">"),
+            buffer("]")
+        ),
         buffer("{"),
         optional(
             repeat(
@@ -178,6 +184,8 @@ $(macro :recursion) {
                                     $(functionArgumentType)
                                 })
                                 $(functionArgumentName)
+                                $(functionArgumentEquals)
+                                $(functionArgumentValue)
                             }) })
                     ) $(functionReturn ... {
                         $(functionReturnTypeRemove ! {
@@ -231,7 +239,10 @@ $(macro :recursion) {
     $(chain(
         buffer("new"),
         ns() as className,
-        buffer("<"),
+        either(
+            buffer("<"),
+            buffer("[")
+        ),
         ls(
             either(
                 token(T_ARRAY),
@@ -239,7 +250,10 @@ $(macro :recursion) {
             ) as type,
             token(",")    
         ) as types,
-        buffer(">"),
+        either(
+            buffer(">"),
+            buffer("]")
+        ),
         optional(
             chain(
                 buffer("("),
