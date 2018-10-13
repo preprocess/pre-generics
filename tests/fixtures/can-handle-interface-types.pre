@@ -1,0 +1,25 @@
+<?php
+
+if (!class_exists('Counter')) {
+    class ConcreteCountable implements \Countable
+    {
+        public function count()
+        {
+            return 3;
+        }
+    }
+
+    class Counter<A being \Countable, B being \Countable> {
+        public function count(A $countable)
+        {
+            return count($countable);
+        }
+
+        public function badCount(B $countable)
+        {
+            return count($countable);
+        }
+    }
+}
+
+return new Counter<ConcreteCountable,array>;

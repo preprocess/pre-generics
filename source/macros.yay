@@ -10,8 +10,15 @@ $(macro :recursion) {
         ),
         ls(
             either(
-                token(T_ARRAY),
-                ns()
+                chain(
+                    ns() as complexTypeName,
+                    buffer("being"),
+                    ns() as complexTypeInterface
+                ) as complexType,
+                either(
+                    ns(),
+                    token(T_ARRAY)
+                ) as simpleType
             ) as type,
             buffer(",")    
         ) as types,
@@ -99,8 +106,13 @@ $(macro :recursion) {
     $substitutions = range("A", "Z");
 
     foreach ($internal["types"] as $i => &$type) {
-        $types[] = $stringFromNs($type["type"]);
         $type["typeSubstitution"] = new \Yay\Token($substitutions[$i]);
+
+        if (isset($type["type"]["complexType"])) {
+            $types[] = $stringFromNs($type["type"]["complexType"]["complexTypeName"]);
+        } else {
+            $types[] = $stringFromNs($type["type"]["simpleType"]);
+        }
     }
 
     foreach ($internal["members"] as &$member) {
@@ -136,16 +148,31 @@ $(macro :recursion) {
         }
     }
 
-
     $property->setValue($ast, $internal);
 } >> {
     class $(className) {
         use \Pre\Generics\GenericTrait;
 
-        private $$(unsafe($GENERIC_MAP)) = [
+        private $$(unsafe($GENERIC_ALIASES)) = [
             $(types ... (,) {
-                $$(stringify($(type))) => $$(stringify($(typeSubstitution)))
-            })
+                $(type ... {
+                    $(simpleType ? {
+                        $$(stringify($(simpleType))) => $$(stringify($(typeSubstitution))) })
+                    $(complexType ? {
+                        $(complexType ... {
+                            $$(stringify($(complexTypeName))) => $$(stringify($(typeSubstitution))) })
+                    }) }) })
+        ];
+
+        private $$(unsafe($GENERIC_INTERFACES)) = [
+            $(types ... (,) {
+                $(type ... {
+                    $(simpleType ? {
+                        $$(stringify($(simpleType))) => null })
+                    $(complexType ? {
+                        $(complexType ... {
+                            $$(stringify($(complexTypeName))) => $$(stringify($(complexTypeInterface))) })
+                    }) }) })
         ];
 
         $(members ... {

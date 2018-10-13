@@ -6,7 +6,15 @@ trait GenericTrait
 {
     protected function validGenericType($value, $type)
     {
-        $substitution = $this->GENERIC_MAP[$type];
+        $interface = $this->GENERIC_INTERFACES[$type];
+
+        if ($interface !== null) {
+            if (!is_a($value, $interface)) {
+                return false;
+            }
+        }
+
+        $substitution = $this->GENERIC_ALIASES[$type];
         $actual = $this->{"GENERIC_TYPE_{$substitution}"};
 
         if ($actual === "mixed") {

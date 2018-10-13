@@ -58,4 +58,18 @@ class GenericsTest extends TestCase
         $greeter = process(__DIR__ . "/fixtures/can-handle-default-parameter-values.pre");
         $this->assertEquals("hello chris.", $greeter->greet());
     }
+
+    public function test_can_handle_interface_types()
+    {
+        $counter = process(__DIR__ . "/fixtures/can-handle-interface-types.pre");
+        $this->assertEquals(3, $counter->count(new ConcreteCountable()));
+    }
+
+    public function test_can_detect_invalid_interface_types()
+    {
+        $counter = process(__DIR__ . "/fixtures/can-handle-interface-types.pre");
+        $this->expectException(AssertionError::class);
+
+        $counter->badCount([1, 2, 3]);
+    }
 }
