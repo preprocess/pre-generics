@@ -123,6 +123,14 @@ $(macro :recursion) {
                         if (isset($argument["functionArgument"]["functionArgumentType"])) {
                             if (in_array($stringFromNs($argument["functionArgument"]["functionArgumentType"]), $types)) {
                                 $argument["functionArgument"]["functionArgumentTypeRemove"] = true;
+
+                                $argument["functionArgument"]["functionArgumentTypeError"] = new \Yay\Token(T_CONSTANT_ENCAPSED_STRING, sprintf(
+                                    "%s in %s::%s() is not a valid %s",
+                                    (string) $argument["functionArgument"]["functionArgumentName"],
+                                    $stringFromNs($internal["className"]),
+                                    $stringFromNs($member["function"]["functionName"]),
+                                    $stringFromNs($argument["functionArgument"]["functionArgumentType"])
+                                ));
                             }
                         }
                     }
@@ -134,6 +142,13 @@ $(macro :recursion) {
                     if (in_array($stringFromNs($member["function"]["functionReturn"]["functionReturnType"]), $types)) {
                         $member["function"]["functionReturnComplex"] = true;
                         $member["function"]["functionReturn"]["functionReturnTypeRemove"] = true;
+
+                        $member["function"]["functionReturn"]["functionReturnTypeError"] = new \Yay\Token(T_CONSTANT_ENCAPSED_STRING, sprintf(
+                            "%s::%s() does not return a valid %s",
+                            $stringFromNs($internal["className"]),
+                            $stringFromNs($member["function"]["functionName"]),
+                            $stringFromNs($member["function"]["functionReturn"]["functionReturnType"])
+                        ));
                     }
                 }
             }
@@ -224,7 +239,7 @@ $(macro :recursion) {
                                 $(functionArgumentTypeRemove ? {
                                     assert($this->validGenericType(
                                         $(functionArgumentName), $$(stringify($(functionArgumentType)))
-                                    )); })
+                                    ), new \UnexpectedValueException($$(stringify($(functionArgumentTypeError))))); })
                             }) })
     
                         
@@ -237,12 +252,12 @@ $(macro :recursion) {
                                 }) {
                                     $(functionBody)
                                 })();
-        
-                                assert($this->validGenericType(
-                                    $$(unsafe($GENERIC_RESULT)), $(functionReturn ... {
-                                        $$(stringify($(functionReturnType)))
-                                    })
-                                ));
+
+                                $(functionReturn ... {
+                                    assert($this->validGenericType(
+                                        $$(unsafe($GENERIC_RESULT)), $$(stringify($(functionReturnType)))
+                                    ), new \UnexpectedValueException($$(stringify($(functionReturnTypeError)))));
+                                })
         
                                 return $$(unsafe($GENERIC_RESULT));
                             })

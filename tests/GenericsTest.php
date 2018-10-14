@@ -22,7 +22,7 @@ class GenericsTest extends TestCase
     public function test_can_detect_invalid_argument_types()
     {
         $combiner = process(__DIR__ . "/fixtures/can-create-basic-generics.pre");
-        $this->expectException(AssertionError::class);
+        $this->expectException(UnexpectedValueException::class);
 
         $combiner->combine('hello', 1);
     }
@@ -30,7 +30,7 @@ class GenericsTest extends TestCase
     public function test_can_detect_invalid_return_types()
     {
         $combiner = process(__DIR__ . "/fixtures/can-create-basic-generics.pre");
-        $this->expectException(AssertionError::class);
+        $this->expectException(UnexpectedValueException::class);
 
         $combiner->badReturn();
     }
@@ -68,7 +68,7 @@ class GenericsTest extends TestCase
     public function test_can_detect_invalid_interface_types()
     {
         $counter = process(__DIR__ . "/fixtures/can-handle-interface-types.pre");
-        $this->expectException(AssertionError::class);
+        $this->expectException(UnexpectedValueException::class);
 
         $counter->badCount([1, 2, 3]);
     }
